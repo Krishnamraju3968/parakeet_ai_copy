@@ -47,7 +47,7 @@ let whisperContextPromise;
 let win;
 let clickThrough = false;
 const windowWidth = 1000;
-const compactWindowHeight = 180;
+const compactWindowHeight = 205;
 
 function createWindow() {
   const {
@@ -96,9 +96,7 @@ ipcMain.handle("window:set-bounds", (event, bounds) => {
   }
   if (
     !bounds ||
-    !["x", "y", "width", "height"].every((key) =>
-      Number.isFinite(bounds[key]),
-    )
+    !["x", "y", "width", "height"].every((key) => Number.isFinite(bounds[key]))
   ) {
     throw new TypeError(
       "Window bounds must contain finite coordinates and dimensions.",
@@ -107,7 +105,10 @@ ipcMain.handle("window:set-bounds", (event, bounds) => {
 
   const { workArea } = screen.getDisplayMatching(win.getBounds());
   const width = Math.min(workArea.width, Math.max(1, Math.ceil(bounds.width)));
-  const height = Math.min(workArea.height, Math.max(1, Math.ceil(bounds.height)));
+  const height = Math.min(
+    workArea.height,
+    Math.max(1, Math.ceil(bounds.height)),
+  );
   const x = Math.min(
     Math.max(Math.round(bounds.x), workArea.x),
     workArea.x + workArea.width - width,
@@ -164,7 +165,17 @@ ipcMain.on("app:quit", (event) => {
 });
 
 /* ── Exa answers. The key stays in this main process, never in the page. ── */
-ipcMain.handle("ai:chat", async (_event, history) => {
+ipcMain.handle("ai:chat", async (event, { history, requestId }) => {
+  if (event.sender !== win?.webContents) {
+    throw new Error("Chat was requested by an unexpected renderer.");
+  }
+  if (
+    !Array.isArray(history) ||
+    typeof requestId !== "string" ||
+    requestId.length === 0
+  ) {
+    throw new TypeError("A chat history and request ID are required.");
+  }
   const key = process.env.EXA_API_KEY;
   if (!key || key === "your_key") {
     const envPath = app.isPackaged
@@ -191,18 +202,68 @@ ipcMain.handle("ai:chat", async (_event, history) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key}`,
       },
-      body: JSON.stringify({ model: "exa", messages, text: true }),
+      body: JSON.stringify({
+        model: "exa",
+        messages,
+        text: true,
+        stream: true,
+      }),
     });
-    const data = await res.json();
-    if (!res.ok)
+    if (!res.ok) {
+      const data = await res.json();
       return {
         error:
           data?.error?.message ||
           `Exa request failed (${res.status}). Check the key and Exa credits.`,
       };
-    return {
-      text: data.choices?.[0]?.message?.content?.trim() || "(empty reply)",
+    }
+
+    if (!res.body) throw new Error("Exa returned an empty response.");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let answer = "";
+    let eventData = [];
+
+    const processEvent = () => {
+      if (eventData.length === 0) return;
+      const data = eventData.join("\n");
+      eventData = [];
+      if (data === "[DONE]") return;
+
+      const payload = JSON.parse(data);
+      const content =
+        payload.choices?.[0]?.delta?.content ??
+        payload.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || content.length === 0) return;
+
+      answer += content;
+      if (!event.sender.isDestroyed()) {
+        event.sender.send("ai:chat-chunk", requestId, content);
+      }
     };
+
+    const processLine = (line) => {
+      if (line === "") {
+        processEvent();
+      } else if (line.startsWith("data:")) {
+        eventData.push(line.slice(5).trimStart());
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
+      for (const line of lines) processLine(line.replace(/\r$/, ""));
+      if (done) break;
+    }
+    if (buffer) processLine(buffer.replace(/\r$/, ""));
+    processEvent();
+
+    return { text: answer.trim() || "(empty reply)" };
   } catch (err) {
     return { error: `Network error: ${err.message}` };
   }

@@ -1,5 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+let chatRequestSequence = 0;
+
 contextBridge.exposeInMainWorld("overlay", {
   onClickThrough: (cb) => ipcRenderer.on("click-through", (_e, on) => cb(on)),
   onFocusInput: (cb) => ipcRenderer.on("focus-input", () => cb()),
@@ -9,7 +11,16 @@ contextBridge.exposeInMainWorld("overlay", {
     ipcRenderer.invoke("window:set-content-height", height),
   resetContentHeight: () => ipcRenderer.invoke("window:reset-content-height"),
   quitApp: () => ipcRenderer.send("app:quit"),
-  chat: (history) => ipcRenderer.invoke("ai:chat", history),
+  chat: (history, onChunk) => {
+    const requestId = String(++chatRequestSequence);
+    const listener = (_event, id, chunk) => {
+      if (id === requestId) onChunk(chunk);
+    };
+    ipcRenderer.on("ai:chat-chunk", listener);
+    return ipcRenderer
+      .invoke("ai:chat", { history, requestId })
+      .finally(() => ipcRenderer.removeListener("ai:chat-chunk", listener));
+  },
   transcribe: (audio) => ipcRenderer.invoke("ai:transcribe", audio),
   onTranscriptionProgress: (cb) =>
     ipcRenderer.on("transcription:progress", (_event, progress) =>

@@ -10,20 +10,20 @@
         font-synthesis: none;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
-        --text: #f4f3fb;
-        --muted: #9696aa;
-        --accent: #aa96ff;
-        --line: rgba(255, 255, 255, 0.1);
-        --surface: rgba(255, 255, 255, 0.045);
+        --text: #f4f4f5;
+        --muted: #b8b8bd;
+        --accent: #c7c7cc;
+        --line: rgba(255, 255, 255, 0.16);
+        --surface: rgba(18, 18, 24, 0.78);
       }
       #start-listening {
-        border-color: rgba(169, 150, 255, 0.15);
-        background: rgba(139, 116, 244, 0.09);
-        color: #d3c9ff;
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.07);
+        color: #e2e2e5;
       }
       #start-listening:hover {
-        border-color: rgba(169, 150, 255, 0.32);
-        background: rgba(139, 116, 244, 0.16);
+        border-color: rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.13);
       }
       * {
         box-sizing: border-box;
@@ -67,7 +67,6 @@
         right: 0;
       }
       .resize-handle.corner {
-        inset: auto;
         width: 12px;
         height: 12px;
       }
@@ -93,14 +92,8 @@
         overflow: hidden;
         height: 100%;
         padding: 14px 20px 13px;
-        background:
-          radial-gradient(
-            ellipse at 10% -30%,
-            rgba(117, 91, 220, 0.18),
-            transparent 48%
-          ),
-          linear-gradient(145deg, rgba(24, 25, 37, 0.98), rgba(13, 14, 22, 0.98));
-        border: 1px solid rgba(255, 255, 255, 0.13);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 20px;
         box-shadow:
           0 22px 65px rgba(0, 0, 0, 0.42),
@@ -121,7 +114,7 @@
         background: linear-gradient(
           90deg,
           transparent,
-          rgba(169, 154, 255, 0.9),
+          rgba(255, 255, 255, 0.65),
           transparent
         );
       }
@@ -143,11 +136,11 @@
         place-items: center;
         width: 30px;
         height: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.19);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         border-radius: 10px;
-        background: linear-gradient(145deg, #ad9aff, #7158e4);
+        background: linear-gradient(145deg, #a5a5aa, #55555c);
         box-shadow:
-          0 4px 14px rgba(125, 102, 237, 0.3),
+          0 4px 14px rgba(0, 0, 0, 0.35),
           inset 0 1px rgba(255, 255, 255, 0.24);
         color: #fff;
         font-size: 14px;
@@ -158,34 +151,7 @@
         font-weight: 680;
         letter-spacing: -0.015em;
       }
-      .mode {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-left: 4px;
-        padding: 5px 9px;
-        border: 1px solid rgba(255, 255, 255, 0.09);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.045);
-        color: var(--muted);
-        font-size: 10px;
-        font-weight: 550;
-        line-height: 1;
-        text-transform: capitalize;
-        white-space: nowrap;
-      }
-      .mode::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #73ddb0;
-        box-shadow: 0 0 8px rgba(115, 221, 176, 0.6);
-      }
-      .mode.click-through::before {
-        background: #f0bf72;
-        box-shadow: 0 0 8px rgba(240, 191, 114, 0.5);
-      }
+
       .header-actions {
         -webkit-app-region: no-drag;
         display: flex;
@@ -203,7 +169,7 @@
         border: 1px solid transparent;
         border-radius: 9px;
         background: transparent;
-        color: #c1c0d0;
+        color: #dedde8;
         cursor: pointer;
         font: inherit;
         font-size: 11px;
@@ -216,8 +182,8 @@
           transform 150ms ease;
       }
       .bar button:hover {
-        border-color: rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.075);
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.12);
         color: #fff;
       }
       .bar button:active:not(:disabled) {
@@ -244,12 +210,12 @@
         color: #fff;
       }
       #dictate-anywhere {
-        color: #b6e6ce;
+        color: #dedee2;
       }
       #dictate-anywhere:hover {
-        border-color: rgba(129, 221, 176, 0.2);
-        background: rgba(129, 221, 176, 0.08);
-        color: #d7f6e5;
+        border-color: rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
       }
       #start-listening,
       #start-computer-listening,
@@ -266,22 +232,22 @@
         display: inline-flex;
       }
       #start-listening svg {
-        color: #b7aaff;
+        color: #dedee2;
       }
       #start-computer-listening {
-        border-color: rgba(126, 205, 235, 0.14);
-        background: rgba(86, 177, 214, 0.07);
-        color: #9edcf0;
+        border-color: rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.07);
+        color: #dedee2;
       }
       #start-computer-listening:hover {
-        border-color: rgba(126, 205, 235, 0.3);
-        background: rgba(86, 177, 214, 0.13);
+        border-color: rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.13);
       }
       #start-computer-listening svg {
-        color: #9edcf0;
+        color: #dedee2;
       }
       #dictate-anywhere svg {
-        color: #9de0c0;
+        color: #dedee2;
       }
       #stop-listening {
         color: #ff9a9f;
@@ -297,7 +263,7 @@
         gap: 2px;
         height: 20px;
         padding: 0 5px;
-        color: #b7aaff;
+        color: #dedee2;
       }
       .listen-activity[hidden],
       #stop-listening[hidden] {
@@ -352,7 +318,7 @@
         width: 0;
         height: 100%;
         border-radius: inherit;
-        background: #81ddb0;
+        background: #d4d4d8;
         transition: width 70ms linear;
       }
       .panel-section {
@@ -360,9 +326,18 @@
         flex-direction: column;
         gap: 9px;
       }
+      .search-section,
+      .results-section {
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+      }
+      .search-section {
+        background: rgba(20, 20, 20, 0.7);
+      }
       .section-title {
         margin: 0;
-        color: #e4e1f1;
+        color: #e5e5e8;
         font-size: 12px;
         font-weight: 650;
         letter-spacing: -0.01em;
@@ -370,6 +345,7 @@
       .results-section {
         flex: 1;
         min-height: 0;
+        background: rgba(0, 0, 0, 0.7);
         animation: results-reveal 180ms ease-out;
       }
       .results-section[hidden] {
@@ -399,7 +375,6 @@
         flex-direction: column;
         gap: 10px;
         padding: 13px 8px 5px 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.085);
         scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
         scrollbar-width: thin;
       }
@@ -435,20 +410,20 @@
       }
       .user {
         align-self: flex-end;
-        border-color: rgba(169, 154, 255, 0.19);
+        border-color: rgba(255, 255, 255, 0.2);
         border-bottom-right-radius: 5px;
         background: linear-gradient(
           145deg,
-          rgba(131, 109, 239, 0.25),
-          rgba(105, 85, 208, 0.17)
+          rgba(255, 255, 255, 0.14),
+          rgba(255, 255, 255, 0.08)
         );
-        color: #eeeaff;
+        color: #f2f2f4;
       }
       .assistant {
         align-self: flex-start;
-        border-color: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.14);
         border-bottom-left-radius: 5px;
-        background: rgba(255, 255, 255, 0.055);
+        background: rgba(255, 255, 255, 0.09);
         color: #e5e6ed;
       }
       .error {
@@ -458,23 +433,32 @@
         color: #ffb9bd;
       }
       .thinking {
-        color: #b7adf7;
+        color: #d0d0d5;
         font-style: italic;
       }
       .thinking::after {
         display: inline-block;
         width: 1.2em;
-        overflow: hidden;
+        content: "";
         vertical-align: bottom;
-        content: "...";
-        animation: thinking-dots 1.2s steps(4, end) infinite;
+        animation: thinking-dots 1.2s steps(1, end) infinite;
       }
       @keyframes thinking-dots {
-        from {
-          width: 0;
+        0%,
+        24% {
+          content: "";
         }
-        to {
-          width: 1.2em;
+        25%,
+        49% {
+          content: ".";
+        }
+        50%,
+        74% {
+          content: "..";
+        }
+        75%,
+        100% {
+          content: "...";
         }
       }
       @media (prefers-reduced-motion: reduce) {
@@ -487,9 +471,9 @@
         align-items: center;
         gap: 10px;
         padding: 5px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 15px;
-        background: rgba(255, 255, 255, 0.04);
+        background: var(--surface);
         box-shadow:
           0 5px 18px rgba(0, 0, 0, 0.12),
           inset 0 1px rgba(255, 255, 255, 0.025);
@@ -498,10 +482,10 @@
           background 150ms ease;
       }
       .row:focus-within {
-        border-color: rgba(169, 150, 255, 0.62);
-        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.42);
+        background: rgba(28, 28, 30, 0.92);
         box-shadow:
-          0 0 0 3px rgba(137, 112, 244, 0.1),
+          0 0 0 3px rgba(255, 255, 255, 0.07),
           0 5px 18px rgba(0, 0, 0, 0.12);
       }
       #microphone-select {
@@ -544,19 +528,31 @@
         line-height: 18px;
       }
       textarea::placeholder {
-        color: #858498;
+        color: #b2b0c1;
       }
       .search-hint {
         display: flex;
         justify-content: space-between;
         gap: 12px;
         padding: 1px 3px 0;
-        color: #8d8b9e;
+        color: #b1afc0;
         font-size: 10px;
         line-height: 14px;
       }
       .search-hint span:last-child {
-        color: #aaa7bc;
+        color: #c8c6d5;
+      }
+      .voice-status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      .voice-status.error {
+        color: #ffb9bd;
+      }
+      .voice-status[hidden] {
+        display: none;
       }
       #send {
         display: grid;
@@ -565,11 +561,11 @@
         height: 38px;
         border: 0;
         border-radius: 9px;
-        background: linear-gradient(145deg, #aa96ff, #765ee8);
+        background: linear-gradient(145deg, #a5a5aa, #5c5c62);
         color: #fff;
         cursor: pointer;
         box-shadow:
-          0 4px 14px rgba(113, 90, 225, 0.28),
+          0 4px 14px rgba(0, 0, 0, 0.35),
           inset 0 1px rgba(255, 255, 255, 0.22);
         transition: 150ms ease;
       }
@@ -584,7 +580,7 @@
       .bar button:focus-visible,
       #microphone-select:focus-visible,
       textarea:focus-visible {
-        outline: 2px solid #c2b5ff;
+        outline: 2px solid #d5d5da;
         outline-offset: 2px;
       }
       #send:disabled {
@@ -601,10 +597,7 @@
         .brand {
           gap: 7px;
         }
-        .mode {
-          margin-left: 0;
-          padding: 5px 7px;
-        }
+
         .header-actions {
           gap: 3px;
         }
@@ -642,7 +635,6 @@
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">v</span>
           <span class="brand-name">Veilpad</span>
-          <span class="mode" id="mode">Interactive</span>
         </div>
         <div class="header-actions">
           <div
@@ -731,7 +723,10 @@
           <button id="exit" title="Exit Veilpad">Exit</button>
         </div>
       </div>
-      <section class="panel-section" aria-labelledby="search-heading">
+      <section
+        class="panel-section search-section"
+        aria-labelledby="search-heading"
+      >
         <h2 class="section-title" id="search-heading">Ask Veilpad</h2>
         <div class="row">
           <select
@@ -768,6 +763,7 @@
           <span>Enter to search · Shift+Enter for a new line</span>
           <span>Voice transcription stays on this device</span>
         </div>
+        <p id="voice-status" class="voice-status" role="status" hidden></p>
       </section>
       <section
         class="panel-section results-section"
@@ -775,7 +771,6 @@
         aria-labelledby="results-heading"
         hidden
       >
-        <h2 class="section-title" id="results-heading">Results</h2>
         <div id="log" role="log" aria-live="polite"></div>
       </section>
     </div>
@@ -793,29 +788,6 @@
     <script>
       let activeResize;
 
-      function applyResize(resize, screenX, screenY) {
-        if (!resize.bounds) return;
-        const deltaX = screenX - resize.startX;
-        const deltaY = screenY - resize.startY;
-        const bounds = { ...resize.bounds };
-        if (resize.direction.includes("left")) {
-          bounds.x += deltaX;
-          bounds.width -= deltaX;
-        } else if (resize.direction.includes("right")) {
-          bounds.width += deltaX;
-        }
-        if (resize.direction.includes("top")) {
-          bounds.y += deltaY;
-          bounds.height -= deltaY;
-        } else if (resize.direction.includes("bottom")) {
-          bounds.height += deltaY;
-        }
-
-        window.overlay.setWindowBounds(bounds).catch((error) => {
-          console.error("Could not resize the window:", error);
-        });
-      }
-
       document.querySelectorAll(".resize-handle").forEach((handle) => {
         handle.addEventListener("pointerdown", async (event) => {
           if (event.button !== 0) return;
@@ -829,15 +801,10 @@
             ),
             startX: event.screenX,
             startY: event.screenY,
-            lastX: event.screenX,
-            lastY: event.screenY,
           };
           activeResize = resize;
           try {
             resize.bounds = await window.overlay.getWindowBounds();
-            if (activeResize === resize) {
-              applyResize(resize, resize.lastX, resize.lastY);
-            }
           } catch (error) {
             if (activeResize === resize) activeResize = undefined;
             console.error("Could not start resizing the window:", error);
@@ -849,14 +816,31 @@
           if (
             !resize ||
             resize.handle !== handle ||
-            resize.pointerId !== event.pointerId
+            resize.pointerId !== event.pointerId ||
+            !resize.bounds
           ) {
             return;
           }
 
-          resize.lastX = event.screenX;
-          resize.lastY = event.screenY;
-          applyResize(resize, event.screenX, event.screenY);
+          const deltaX = event.screenX - resize.startX;
+          const deltaY = event.screenY - resize.startY;
+          const bounds = { ...resize.bounds };
+          if (resize.direction.includes("left")) {
+            bounds.x += deltaX;
+            bounds.width -= deltaX;
+          } else if (resize.direction.includes("right")) {
+            bounds.width += deltaX;
+          }
+          if (resize.direction.includes("top")) {
+            bounds.y += deltaY;
+            bounds.height -= deltaY;
+          } else if (resize.direction.includes("bottom")) {
+            bounds.height += deltaY;
+          }
+
+          window.overlay.setWindowBounds(bounds).catch((error) => {
+            console.error("Could not resize the window:", error);
+          });
         });
 
         const stopResizing = (event) => {
@@ -884,6 +868,7 @@
       const microphoneMeter = document.getElementById("mic-meter");
       const microphoneMeterFill = document.getElementById("mic-meter-fill");
       const clearBtn = document.getElementById("clear");
+      const voiceStatus = document.getElementById("voice-status");
       let history = [];
       let busy = false;
       let listening = false;
@@ -1016,10 +1001,21 @@
           transcriptionStatus.textContent = "Loading offline speech model…";
         } else if (progress.phase === "transcribing") {
           transcriptionStatus.textContent = Number.isFinite(progress.progress)
-            ? `Transcribing on this device… ${progress.progress}%`
-            : "Transcribing on this device…";
+            ? `Translating… ${progress.progress}%`
+            : "Translating…";
         }
       });
+
+      function showVoiceStatus(message, isError = false) {
+        voiceStatus.textContent = message;
+        voiceStatus.classList.toggle("error", isError);
+        voiceStatus.hidden = !message;
+        scheduleWindowFit();
+      }
+
+      function clearVoiceStatus() {
+        showVoiceStatus("");
+      }
 
       function updateListeningUI(active, isTranscribing = false) {
         listening = active;
@@ -1075,6 +1071,7 @@
         sourceType = "microphone",
       ) {
         if (listening || starting || transcribing) return;
+        clearVoiceStatus();
         starting = true;
         globalDictation = forGlobalDictation;
         listeningSource = sourceType;
@@ -1092,7 +1089,7 @@
               ? "Computer audio capture isn't supported by this version of Veilpad."
               : "Microphone recording isn't supported by this version of Veilpad.";
           if (forGlobalDictation) window.overlay.reportDictationError(message);
-          else add("error", message);
+          else showVoiceStatus(message, true);
           return;
         }
         try {
@@ -1173,7 +1170,7 @@
                   ? "No microphone was found. Connect a microphone and try again."
                   : `Couldn't start voice input: ${error.message}`;
           if (forGlobalDictation) window.overlay.reportDictationError(message);
-          else add("error", message);
+          else showVoiceStatus(message, true);
         }
       }
 
@@ -1182,6 +1179,11 @@
         updateListeningUI(false, true);
         microphoneSelect.disabled = false;
         transcribeRecording();
+      }
+
+      function removeTranscriptionStatus() {
+        clearVoiceStatus();
+        transcriptionStatus = undefined;
       }
 
       async function cleanupAudioCapture() {
@@ -1204,9 +1206,8 @@
         const pasteIntoFocusedApp = globalDictation;
         const sourceName =
           listeningSource === "computer" ? "computer audio" : "microphone";
-        transcriptionStatus = pasteIntoFocusedApp
-          ? null
-          : add("assistant", "Preparing offline transcription…", "thinking");
+        transcriptionStatus = pasteIntoFocusedApp ? null : voiceStatus;
+        if (transcriptionStatus) showVoiceStatus("Preparing transcription…");
         try {
           const sampleRate = audioContext?.sampleRate || 48000;
           await cleanupAudioCapture();
@@ -1219,13 +1220,13 @@
             );
           }
           if (transcriptionStatus)
-            transcriptionStatus.textContent = "Transcribing on this device…";
+            showVoiceStatus("Translating…");
           const result = await window.overlay.transcribe(wav.data);
-          transcriptionStatus?.remove();
+          removeTranscriptionStatus();
           if (result.error) {
             if (pasteIntoFocusedApp)
               window.overlay.reportDictationError(result.error);
-            else add("error", result.error);
+            else showVoiceStatus(result.error, true);
           } else if (
             result.text &&
             !/^\[blank[_ ]audio\]$/i.test(result.text.trim())
@@ -1250,13 +1251,13 @@
                 : "No speech was detected. Check System Settings > Sound > Input, choose the microphone you are speaking into, and try again.";
             if (pasteIntoFocusedApp)
               window.overlay.reportDictationError(message);
-            else add("error", message);
+            else showVoiceStatus(message, true);
           }
         } catch (error) {
-          transcriptionStatus?.remove();
+          removeTranscriptionStatus();
           const message = `Couldn't transcribe audio: ${error.message}`;
           if (pasteIntoFocusedApp) window.overlay.reportDictationError(message);
-          else add("error", message);
+          else showVoiceStatus(message, true);
         } finally {
           transcriptionStatus = undefined;
           recordedAudio = [];
@@ -1300,14 +1301,21 @@
         if (fitWindowFrame !== undefined) return;
         fitWindowFrame = requestAnimationFrame(() => {
           fitWindowFrame = undefined;
-          if (resultsSection.hidden) return;
+          if (resultsSection.hidden && voiceStatus.hidden) {
+            window.overlay.resetContentHeight().catch((error) => {
+              console.error("Could not reset the results window:", error);
+            });
+            return;
+          }
+
           const card = document.querySelector(".card");
+          const previousHeight = card.style.height;
+          card.style.height = "auto";
           const height =
             card.scrollHeight +
-            card.offsetHeight -
-            card.clientHeight -
-            log.clientHeight +
-            log.scrollHeight;
+            (resultsSection.hidden ? 0 : log.scrollHeight - log.clientHeight);
+          card.style.height = previousHeight;
+
           window.overlay.setContentHeight(Math.ceil(height)).catch((error) => {
             console.error("Could not resize the results window:", error);
           });
@@ -1343,19 +1351,34 @@
         history.push({ role: "user", content: text });
         add("user", text);
         const thinking = add("assistant", "Thinking", "thinking");
+        let response;
 
         try {
-          const res = await window.overlay.chat(history);
+          const res = await window.overlay.chat(history, (chunk) => {
+            if (!response) {
+              thinking.remove();
+              response = add("assistant", "");
+            }
+            response.textContent += chunk;
+            log.scrollTop = log.scrollHeight;
+          });
           thinking.remove();
           if (res.error) {
+            response?.remove();
             add("error", res.error);
             history.pop(); // let the user retry the same question
           } else {
-            history.push({ role: "assistant", content: res.text });
-            add("assistant", res.text);
+            const answer = res.text || "(empty reply)";
+            history.push({ role: "assistant", content: answer });
+            if (response) {
+              response.textContent = answer;
+            } else {
+              add("assistant", answer);
+            }
           }
         } catch (error) {
           thinking.remove();
+          response?.remove();
           add("error", `Couldn't complete the search: ${error.message}`);
           history.pop();
         } finally {
