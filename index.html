@@ -35,6 +35,58 @@
         background: transparent;
         color: var(--text);
       }
+      .resize-handle {
+        position: fixed;
+        z-index: 10;
+        -webkit-app-region: no-drag;
+        touch-action: none;
+        cursor: default !important;
+      }
+      .resize-handle.top,
+      .resize-handle.bottom {
+        right: 8px;
+        left: 8px;
+        height: 8px;
+      }
+      .resize-handle.top {
+        top: 0;
+      }
+      .resize-handle.bottom {
+        bottom: 0;
+      }
+      .resize-handle.left,
+      .resize-handle.right {
+        top: 8px;
+        bottom: 8px;
+        width: 8px;
+      }
+      .resize-handle.left {
+        left: 0;
+      }
+      .resize-handle.right {
+        right: 0;
+      }
+      .resize-handle.corner {
+        inset: auto;
+        width: 12px;
+        height: 12px;
+      }
+      .resize-handle.top.left {
+        top: 0;
+        left: 0;
+      }
+      .resize-handle.top.right {
+        top: 0;
+        right: 0;
+      }
+      .resize-handle.bottom.left {
+        bottom: 0;
+        left: 0;
+      }
+      .resize-handle.bottom.right {
+        right: 0;
+        bottom: 0;
+      }
       .card {
         position: relative;
         isolation: isolate;
@@ -727,8 +779,96 @@
         <div id="log" role="log" aria-live="polite"></div>
       </section>
     </div>
+    <div id="resize-handles" aria-hidden="true">
+      <div class="resize-handle top"></div>
+      <div class="resize-handle right"></div>
+      <div class="resize-handle bottom"></div>
+      <div class="resize-handle left"></div>
+      <div class="resize-handle corner top left"></div>
+      <div class="resize-handle corner top right"></div>
+      <div class="resize-handle corner bottom left"></div>
+      <div class="resize-handle corner bottom right"></div>
+    </div>
 
     <script>
+      let activeResize;
+
+      function applyResize(resize, screenX, screenY) {
+        if (!resize.bounds) return;
+        const deltaX = screenX - resize.startX;
+        const deltaY = screenY - resize.startY;
+        const bounds = { ...resize.bounds };
+        if (resize.direction.includes("left")) {
+          bounds.x += deltaX;
+          bounds.width -= deltaX;
+        } else if (resize.direction.includes("right")) {
+          bounds.width += deltaX;
+        }
+        if (resize.direction.includes("top")) {
+          bounds.y += deltaY;
+          bounds.height -= deltaY;
+        } else if (resize.direction.includes("bottom")) {
+          bounds.height += deltaY;
+        }
+
+        window.overlay.setWindowBounds(bounds).catch((error) => {
+          console.error("Could not resize the window:", error);
+        });
+      }
+
+      document.querySelectorAll(".resize-handle").forEach((handle) => {
+        handle.addEventListener("pointerdown", async (event) => {
+          if (event.button !== 0) return;
+          event.preventDefault();
+          handle.setPointerCapture(event.pointerId);
+          const resize = {
+            handle,
+            pointerId: event.pointerId,
+            direction: [...handle.classList].filter((name) =>
+              ["top", "right", "bottom", "left"].includes(name),
+            ),
+            startX: event.screenX,
+            startY: event.screenY,
+            lastX: event.screenX,
+            lastY: event.screenY,
+          };
+          activeResize = resize;
+          try {
+            resize.bounds = await window.overlay.getWindowBounds();
+            if (activeResize === resize) {
+              applyResize(resize, resize.lastX, resize.lastY);
+            }
+          } catch (error) {
+            if (activeResize === resize) activeResize = undefined;
+            console.error("Could not start resizing the window:", error);
+          }
+        });
+
+        handle.addEventListener("pointermove", (event) => {
+          const resize = activeResize;
+          if (
+            !resize ||
+            resize.handle !== handle ||
+            resize.pointerId !== event.pointerId
+          ) {
+            return;
+          }
+
+          resize.lastX = event.screenX;
+          resize.lastY = event.screenY;
+          applyResize(resize, event.screenX, event.screenY);
+        });
+
+        const stopResizing = (event) => {
+          if (activeResize?.pointerId === event.pointerId) {
+            activeResize = undefined;
+          }
+        };
+        handle.addEventListener("pointerup", stopResizing);
+        handle.addEventListener("pointercancel", stopResizing);
+        handle.addEventListener("lostpointercapture", stopResizing);
+      });
+
       const log = document.getElementById("log");
       const resultsSection = document.getElementById("results-section");
       const input = document.getElementById("input");

@@ -3,6 +3,8 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("overlay", {
   onClickThrough: (cb) => ipcRenderer.on("click-through", (_e, on) => cb(on)),
   onFocusInput: (cb) => ipcRenderer.on("focus-input", () => cb()),
+  getWindowBounds: () => ipcRenderer.invoke("window:get-bounds"),
+  setWindowBounds: (bounds) => ipcRenderer.invoke("window:set-bounds", bounds),
   setContentHeight: (height) =>
     ipcRenderer.invoke("window:set-content-height", height),
   resetContentHeight: () => ipcRenderer.invoke("window:reset-content-height"),

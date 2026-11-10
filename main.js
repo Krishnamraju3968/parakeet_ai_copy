@@ -64,7 +64,7 @@ function createWindow() {
     y,
     frame: false,
     transparent: true,
-    resizable: true,
+    resizable: false,
     hasShadow: false,
     skipTaskbar: true,
     alwaysOnTop: true,
@@ -82,6 +82,42 @@ function createWindow() {
 
   win.loadFile("index.html");
 }
+
+ipcMain.handle("window:get-bounds", (event) => {
+  if (event.sender !== win?.webContents) {
+    throw new Error("Window bounds were requested by an unexpected renderer.");
+  }
+  return win.getBounds();
+});
+
+ipcMain.handle("window:set-bounds", (event, bounds) => {
+  if (event.sender !== win?.webContents) {
+    throw new Error("Window resize was requested by an unexpected renderer.");
+  }
+  if (
+    !bounds ||
+    !["x", "y", "width", "height"].every((key) =>
+      Number.isFinite(bounds[key]),
+    )
+  ) {
+    throw new TypeError(
+      "Window bounds must contain finite coordinates and dimensions.",
+    );
+  }
+
+  const { workArea } = screen.getDisplayMatching(win.getBounds());
+  const width = Math.min(workArea.width, Math.max(1, Math.ceil(bounds.width)));
+  const height = Math.min(workArea.height, Math.max(1, Math.ceil(bounds.height)));
+  const x = Math.min(
+    Math.max(Math.round(bounds.x), workArea.x),
+    workArea.x + workArea.width - width,
+  );
+  const y = Math.min(
+    Math.max(Math.round(bounds.y), workArea.y),
+    workArea.y + workArea.height - height,
+  );
+  win.setBounds({ x, y, width, height });
+});
 
 ipcMain.handle("window:set-content-height", (event, height) => {
   if (event.sender !== win?.webContents) {
