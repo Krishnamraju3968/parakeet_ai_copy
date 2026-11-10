@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("overlay", {
   setContentHeight: (height) =>
     ipcRenderer.invoke("window:set-content-height", height),
   resetContentHeight: () => ipcRenderer.invoke("window:reset-content-height"),
+  quitApp: () => ipcRenderer.send("app:quit"),
   chat: (history) => ipcRenderer.invoke("ai:chat", history),
   transcribe: (audio) => ipcRenderer.invoke("ai:transcribe", audio),
   onTranscriptionProgress: (cb) =>

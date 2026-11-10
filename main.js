@@ -20,8 +20,11 @@ const { pipeline } = require("stream/promises");
 
 /* ── tiny .env loader (no extra dependency) ── */
 function loadEnv() {
+  const envPath = app.isPackaged
+    ? path.join(app.getPath("userData"), ".env")
+    : path.join(__dirname, ".env");
   try {
-    const raw = fs.readFileSync(path.join(__dirname, ".env"), "utf8");
+    const raw = fs.readFileSync(envPath, "utf8");
     for (const line of raw.split(/\r?\n/)) {
       const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
       if (m && !process.env[m[1]])
@@ -108,13 +111,31 @@ ipcMain.handle("window:reset-content-height", (event) => {
   win.setSize(width, Math.min(compactWindowHeight, workAreaHeight));
 });
 
+function quitApp() {
+  try {
+    globalShortcut.unregisterAll();
+    if (win && !win.isDestroyed()) win.destroy();
+  } finally {
+    // exit() does not wait on the pending renderer reply. quit() from
+    // inside ipcMain.handle never finishes, so the process stays open.
+    app.exit(0);
+  }
+}
+
+ipcMain.on("app:quit", (event) => {
+  if (event.sender !== win?.webContents) return;
+  setImmediate(quitApp);
+});
+
 /* ── Exa answers. The key stays in this main process, never in the page. ── */
 ipcMain.handle("ai:chat", async (_event, history) => {
   const key = process.env.EXA_API_KEY;
   if (!key || key === "your_key") {
+    const envPath = app.isPackaged
+      ? path.join(app.getPath("userData"), ".env")
+      : ".env";
     return {
-      error:
-        "Add your Exa API key as EXA_API_KEY in .env, then restart Veilpad.",
+      error: `Add your Exa API key as EXA_API_KEY in ${envPath}, then restart Veilpad.`,
     };
   }
   try {
@@ -403,7 +424,7 @@ app.whenReady().then(() => {
   });
 
   // Ctrl/Cmd+Shift+Q → quit
-  globalShortcut.register("CommandOrControl+Shift+Q", () => app.quit());
+  globalShortcut.register("CommandOrControl+Shift+Q", quitApp);
 
   // Ctrl/Cmd+Shift+D → toggle dictation into the focused app
   globalShortcut.register("CommandOrControl+Shift+D", () => {
