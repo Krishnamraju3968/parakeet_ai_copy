@@ -1,0 +1,1030 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Veilpad</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        --text: #f3f4f8;
+        --muted: #898d9d;
+        --accent: #a99aff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: transparent;
+        color: var(--text);
+      }
+      .card {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        height: 100%;
+        padding: 16px 20px 14px;
+        background: linear-gradient(
+          135deg,
+          rgba(23, 24, 34, 0.97),
+          rgba(13, 14, 21, 0.97)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        box-shadow:
+          0 18px 55px rgba(0, 0, 0, 0.36),
+          inset 0 1px rgba(255, 255, 255, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(169, 154, 255, 0.9),
+          transparent
+        );
+      }
+      .bar {
+        -webkit-app-region: drag;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 30px;
+        user-select: none;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        background: linear-gradient(145deg, #9d8aff, #6854d9);
+        box-shadow: 0 3px 12px rgba(125, 102, 237, 0.3);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .brand-name {
+        font-size: 13px;
+        font-weight: 650;
+        letter-spacing: 0.01em;
+      }
+      .mode {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: 9px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .mode::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #72d6a0;
+      }
+      .mode.click-through::before {
+        background: #eab96b;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .bar button {
+        -webkit-app-region: no-drag;
+        padding: 6px 9px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font: inherit;
+        font-size: 11px;
+        transition: 150ms ease;
+      }
+      .bar button:hover {
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+      }
+      .bar button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      .bar button:disabled:hover {
+        border-color: transparent;
+        background: transparent;
+        color: var(--muted);
+      }
+      #dictate-anywhere {
+        color: #b6e6ce;
+      }
+      #dictate-anywhere:hover {
+        border-color: rgba(129, 221, 176, 0.2);
+        background: rgba(129, 221, 176, 0.08);
+        color: #d7f6e5;
+      }
+      #start-listening,
+      #stop-listening {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #start-listening[hidden] {
+        display: none;
+      }
+      #start-listening:disabled {
+        display: inline-flex;
+      }
+      #start-listening svg {
+        color: #b7aaff;
+      }
+      #dictate-anywhere svg {
+        color: #9de0c0;
+      }
+      #stop-listening {
+        color: #ff9a9f;
+      }
+      #stop-listening:hover {
+        border-color: rgba(255, 128, 128, 0.2);
+        background: rgba(160, 54, 64, 0.16);
+        color: #ffc0c3;
+      }
+      .listen-activity {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 20px;
+        padding: 0 5px;
+        color: #b7aaff;
+      }
+      .listen-activity[hidden],
+      #stop-listening[hidden] {
+        display: none;
+      }
+      .listen-activity span {
+        width: 2px;
+        height: 5px;
+        border-radius: 2px;
+        background: currentColor;
+        animation: listen-wave 800ms ease-in-out infinite alternate;
+      }
+      .listen-activity span:nth-child(2) {
+        animation-delay: 120ms;
+      }
+      .listen-activity span:nth-child(3) {
+        animation-delay: 240ms;
+      }
+      .listen-activity span:nth-child(4) {
+        animation-delay: 360ms;
+      }
+      .listen-activity span:nth-child(5) {
+        animation-delay: 480ms;
+      }
+      @keyframes listen-wave {
+        from {
+          height: 4px;
+          opacity: 0.55;
+        }
+        to {
+          height: 15px;
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .listen-activity span {
+          animation: none;
+          height: 8px;
+        }
+      }
+      .mic-meter {
+        width: 42px;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .mic-meter[hidden] {
+        display: none;
+      }
+      .mic-meter-fill {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: #81ddb0;
+        transition: width 70ms linear;
+      }
+      .panel-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .section-title {
+        margin: 0;
+        color: #d9d9e3;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.015em;
+      }
+      .results-section {
+        flex: 1;
+        min-height: 0;
+        animation: results-reveal 180ms ease-out;
+      }
+      .results-section[hidden] {
+        display: none;
+      }
+      @keyframes results-reveal {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .results-section {
+          animation: none;
+        }
+      }
+      #log {
+        position: relative;
+        flex: 1;
+        min-height: 120px;
+        max-height: 300px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 12px 8px 4px 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+        scrollbar-width: thin;
+      }
+      #log:empty::before,
+      #log:empty::after {
+        align-self: center;
+        text-align: center;
+        pointer-events: none;
+      }
+      #log:empty::before {
+        content: "A little space to think.";
+        margin: auto 0 0;
+        color: #e4e0fa;
+        font-size: 14px;
+        font-weight: 550;
+        letter-spacing: 0.01em;
+      }
+      #log:empty::after {
+        content: "Ask with Exa, or use offline voice. The speech model downloads once.";
+        margin: 0 0 auto;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .msg {
+        max-width: 90%;
+        padding: 10px 13px;
+        border: 1px solid transparent;
+        border-radius: 13px;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .user {
+        align-self: flex-end;
+        border-color: rgba(169, 154, 255, 0.19);
+        border-bottom-right-radius: 5px;
+        background: rgba(131, 109, 239, 0.2);
+        color: #eeeaff;
+      }
+      .assistant {
+        align-self: flex-start;
+        border-color: rgba(255, 255, 255, 0.07);
+        border-bottom-left-radius: 5px;
+        background: rgba(255, 255, 255, 0.065);
+        color: #e5e6ed;
+      }
+      .error {
+        align-self: flex-start;
+        border-color: rgba(255, 128, 128, 0.17);
+        background: rgba(160, 54, 64, 0.2);
+        color: #ffb9bd;
+      }
+      .thinking {
+        color: #b7adf7;
+        font-style: italic;
+      }
+      .thinking::after {
+        display: inline-block;
+        width: 1.2em;
+        overflow: hidden;
+        vertical-align: bottom;
+        content: "...";
+        animation: thinking-dots 1.2s steps(4, end) infinite;
+      }
+      @keyframes thinking-dots {
+        from {
+          width: 0;
+        }
+        to {
+          width: 1.2em;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .thinking::after {
+          animation: none;
+        }
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.11);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.045);
+        transition:
+          border-color 150ms ease,
+          background 150ms ease;
+      }
+      .row:focus-within {
+        border-color: rgba(169, 154, 255, 0.55);
+        background: rgba(255, 255, 255, 0.065);
+      }
+      #microphone-select {
+        flex: 0 0 138px;
+        width: 138px;
+        height: 38px;
+        padding: 0 8px;
+        border: 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px 0 0 8px;
+        outline: 0;
+        background: transparent;
+        color: #b7bac8;
+        font: inherit;
+        font-size: 11px;
+      }
+      #microphone-select option {
+        background: #181923;
+        color: var(--text);
+      }
+      textarea {
+        flex: 1;
+        min-width: 0;
+        resize: none;
+        height: 38px;
+        max-height: 90px;
+        overflow-y: hidden;
+        padding: 10px 11px;
+        border: 0;
+        border-radius: 8px;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        line-height: 18px;
+      }
+      textarea::placeholder {
+        color: #777b8b;
+      }
+      .search-hint {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 3px;
+        color: #777b8b;
+        font-size: 10px;
+        line-height: 14px;
+      }
+      .search-hint span:last-child {
+        color: #8c8f9e;
+      }
+      #send {
+        display: grid;
+        place-items: center;
+        flex: 0 0 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 9px;
+        background: linear-gradient(145deg, #9d8aff, #745fe4);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 3px 10px rgba(113, 90, 225, 0.25);
+        transition: 150ms ease;
+      }
+      #send:hover {
+        filter: brightness(1.12);
+        transform: translateY(-1px);
+      }
+      #send:active {
+        transform: translateY(0);
+      }
+      #send:focus-visible,
+      .bar button:focus-visible,
+      #microphone-select:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid #b6aaff;
+        outline-offset: 2px;
+      }
+      #send:disabled {
+        opacity: 0.45;
+        cursor: default;
+        filter: none;
+        transform: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">v</span>
+          <span class="brand-name">Veilpad</span>
+          <span class="mode" id="mode">interactive</span>
+        </div>
+        <div class="header-actions">
+          <div
+            class="listen-activity"
+            id="listening-indicator"
+            role="status"
+            aria-label="Listening"
+            hidden
+          >
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div
+            class="mic-meter"
+            id="mic-meter"
+            role="meter"
+            aria-label="Microphone input level"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            hidden
+          >
+            <div class="mic-meter-fill" id="mic-meter-fill"></div>
+          </div>
+          <button id="start-listening" title="Start offline voice input">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="9"
+                y="3"
+                width="6"
+                height="12"
+                rx="3"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M5.5 11a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span id="voice-action-label">Start listening</span>
+          </button>
+          <button id="stop-listening" title="Stop voice input" hidden>
+            Stop listening
+          </button>
+
+          <button id="clear" title="Clear conversation" disabled>
+            Clear chat
+          </button>
+        </div>
+      </div>
+      <section class="panel-section" aria-labelledby="search-heading">
+        <h2 class="section-title" id="search-heading">Search</h2>
+        <div class="row">
+          <select
+            id="microphone-select"
+            aria-label="Microphone input"
+            title="Microphone input"
+          >
+            <option value="">Default microphone</option>
+          </select>
+          <textarea
+            id="input"
+            aria-label="Message"
+            placeholder="Ask anything…"
+          ></textarea>
+          <button id="send" aria-label="Send message" title="Send message">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 12h14M13 6l6 6-6 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="search-hint" aria-hidden="true">
+          <span>Enter to search · Shift+Enter for a new line</span>
+          <span>Voice transcription stays on this device</span>
+        </div>
+      </section>
+      <section
+        class="panel-section results-section"
+        id="results-section"
+        aria-labelledby="results-heading"
+        hidden
+      >
+        <h2 class="section-title" id="results-heading">Results</h2>
+        <div id="log" role="log" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <script>
+      const log = document.getElementById("log");
+      const resultsSection = document.getElementById("results-section");
+      const input = document.getElementById("input");
+      const sendBtn = document.getElementById("send");
+      const startListeningBtn = document.getElementById("start-listening");
+      const stopListeningBtn = document.getElementById("stop-listening");
+      const dictateAnywhereBtn = document.getElementById("dictate-anywhere");
+      const listeningIndicator = document.getElementById("listening-indicator");
+      const microphoneSelect = document.getElementById("microphone-select");
+      const microphoneMeter = document.getElementById("mic-meter");
+      const microphoneMeterFill = document.getElementById("mic-meter-fill");
+      const clearBtn = document.getElementById("clear");
+      let history = [];
+      let busy = false;
+      let listening = false;
+      let starting = false;
+      let transcribing = false;
+      let mediaStream;
+      let audioContext;
+      let audioProcessor;
+      let silentGain;
+      let recordedAudio = [];
+      let recordingSampleCount = 0;
+      let globalDictation = false;
+      let transcriptionStatus;
+
+      async function refreshMicrophones(
+        preferredDeviceId = microphoneSelect.value,
+      ) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const microphones = devices.filter(
+          (device) => device.kind === "audioinput",
+        );
+        const previousValue = preferredDeviceId;
+        microphoneSelect.replaceChildren(new Option("Default microphone", ""));
+        microphones.forEach((device, index) => {
+          const option = new Option(
+            device.label || `Microphone ${index + 1}`,
+            device.deviceId,
+          );
+          microphoneSelect.add(option);
+        });
+        if (microphones.some((device) => device.deviceId === previousValue)) {
+          microphoneSelect.value = previousValue;
+        }
+      }
+
+      function toWav(chunks, sourceSampleRate, sampleCount) {
+        const sampleRate = 16000;
+        const frameCount = Math.ceil(
+          (sampleCount * sampleRate) / sourceSampleRate,
+        );
+        if (!frameCount) throw new Error("The microphone recording was empty.");
+        const audio = new Float32Array(sampleCount);
+        let chunkOffset = 0;
+        for (const chunk of chunks) {
+          audio.set(chunk, chunkOffset);
+          chunkOffset += chunk.length;
+        }
+        let sumSquares = 0;
+        let peak = 0;
+        const wav = new ArrayBuffer(44 + frameCount * 2);
+        const view = new DataView(wav);
+        const write = (offset, value) => {
+          for (let i = 0; i < value.length; i++)
+            view.setUint8(offset + i, value.charCodeAt(i));
+        };
+        write(0, "RIFF");
+        view.setUint32(4, wav.byteLength - 8, true);
+        write(8, "WAVE");
+        write(12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        write(36, "data");
+        view.setUint32(40, frameCount * 2, true);
+        for (let i = 0; i < frameCount; i++) {
+          const sourceIndex = (i * sourceSampleRate) / sampleRate;
+          const lowerIndex = Math.min(
+            Math.floor(sourceIndex),
+            audio.length - 1,
+          );
+          const upperIndex = Math.min(lowerIndex + 1, audio.length - 1);
+          const fraction = sourceIndex - lowerIndex;
+          const sample = Math.max(
+            -1,
+            Math.min(
+              1,
+              audio[lowerIndex] * (1 - fraction) + audio[upperIndex] * fraction,
+            ),
+          );
+          sumSquares += sample * sample;
+          peak = Math.max(peak, Math.abs(sample));
+          view.setInt16(
+            44 + i * 2,
+            sample < 0 ? sample * 0x8000 : sample * 0x7fff,
+            true,
+          );
+        }
+        return {
+          data: new Uint8Array(wav),
+          rms: Math.sqrt(sumSquares / frameCount),
+          peak,
+        };
+      }
+
+      navigator.mediaDevices?.addEventListener("devicechange", () => {
+        refreshMicrophones().catch((error) =>
+          console.error("Could not refresh microphone devices:", error),
+        );
+      });
+
+      function updateMicrophoneLevel(samples) {
+        let sumSquares = 0;
+        for (let i = 0; i < samples.length; i++)
+          sumSquares += samples[i] * samples[i];
+        const rms = Math.sqrt(sumSquares / samples.length);
+        const level = Math.min(100, Math.round(rms * 500));
+        microphoneMeter.setAttribute("aria-valuenow", String(level));
+        microphoneMeterFill.style.width = `${level}%`;
+      }
+
+      refreshMicrophones().catch((error) =>
+        console.error("Could not list microphone devices:", error),
+      );
+
+      window.overlay.onTranscriptionProgress((progress) => {
+        if (!transcriptionStatus) return;
+        if (progress.phase === "download") {
+          const received = Math.round(progress.received / (1024 * 1024));
+          const total = Math.round(progress.total / (1024 * 1024));
+          transcriptionStatus.textContent = progress.total
+            ? `Downloading offline speech model… ${Math.min(100, Math.round((progress.received / progress.total) * 100))}% (${received}/${total} MB)`
+            : "Downloading offline speech model…";
+        } else if (progress.phase === "loading") {
+          transcriptionStatus.textContent = "Loading offline speech model…";
+        } else if (progress.phase === "transcribing") {
+          transcriptionStatus.textContent = Number.isFinite(progress.progress)
+            ? `Transcribing on this device… ${progress.progress}%`
+            : "Transcribing on this device…";
+        }
+      });
+
+      function updateListeningUI(active, isTranscribing = false) {
+        listening = active;
+        transcribing = isTranscribing;
+        startListeningBtn.hidden = active;
+        startListeningBtn.disabled = isTranscribing;
+        stopListeningBtn.hidden = !active;
+        stopListeningBtn.disabled = isTranscribing;
+        stopListeningBtn.textContent = globalDictation
+          ? "Stop & paste"
+          : "Stop listening";
+        listeningIndicator.hidden = !active;
+        startListeningBtn.title = isTranscribing
+          ? "Transcribing audio…"
+          : "Start offline voice input";
+        document.getElementById("voice-action-label").textContent =
+          isTranscribing ? "Transcribing…" : "Start listening";
+        microphoneMeter.hidden = !active;
+        if (!active) {
+          microphoneMeter.setAttribute("aria-valuenow", "0");
+          microphoneMeterFill.style.width = "0";
+        }
+        input.readOnly = active || isTranscribing;
+        updateSendButton();
+      }
+
+      function updateSendButton() {
+        sendBtn.disabled =
+          busy || listening || transcribing || !input.value.trim();
+      }
+
+      function updateClearButton() {
+        clearBtn.disabled = busy || log.childElementCount === 0;
+      }
+
+      function resizeInput() {
+        input.style.height = "38px";
+        input.style.height = `${Math.min(input.scrollHeight, 90)}px`;
+        input.style.overflowY = input.scrollHeight > 90 ? "auto" : "hidden";
+      }
+
+      async function startListening(forGlobalDictation = false) {
+        if (listening || starting || transcribing) return;
+        starting = true;
+        globalDictation = forGlobalDictation;
+        if (
+          !navigator.mediaDevices?.getUserMedia ||
+          !window.AudioContext?.prototype.createScriptProcessor
+        ) {
+          starting = false;
+          globalDictation = false;
+          const message =
+            "Microphone recording isn't supported by this version of Veilpad.";
+          if (forGlobalDictation) window.overlay.reportDictationError(message);
+          else add("error", message);
+          return;
+        }
+        try {
+          const selectedDeviceId = microphoneSelect.value;
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              ...(selectedDeviceId
+                ? { deviceId: { exact: selectedDeviceId } }
+                : {}),
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+          const actualDeviceId = mediaStream
+            .getAudioTracks()[0]
+            ?.getSettings().deviceId;
+          await refreshMicrophones(selectedDeviceId || actualDeviceId || "");
+          recordedAudio = [];
+          recordingSampleCount = 0;
+          audioContext = new AudioContext();
+          await audioContext.resume();
+          const source = audioContext.createMediaStreamSource(mediaStream);
+          audioProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+          silentGain = audioContext.createGain();
+          silentGain.gain.value = 0;
+          audioProcessor.onaudioprocess = (event) => {
+            const inputSamples = event.inputBuffer.getChannelData(0);
+            const samples = new Float32Array(inputSamples);
+            recordedAudio.push(samples);
+            recordingSampleCount += samples.length;
+            updateMicrophoneLevel(samples);
+          };
+          source.connect(audioProcessor);
+          audioProcessor.connect(silentGain);
+          silentGain.connect(audioContext.destination);
+          if (selectedDeviceId && selectedDeviceId !== actualDeviceId) {
+            throw new Error("The selected microphone could not be opened.");
+          }
+          updateListeningUI(true);
+          microphoneSelect.disabled = true;
+          starting = false;
+          if (globalDictation) window.overlay.dictationStarted();
+        } catch (error) {
+          starting = false;
+          globalDictation = false;
+          await cleanupAudioCapture();
+          updateListeningUI(false);
+          const message =
+            error.name === "NotAllowedError"
+              ? "Microphone access was denied. Allow Veilpad to use the microphone in System Settings."
+              : error.name === "NotFoundError"
+                ? "No microphone was found. Connect a microphone and try again."
+                : `Couldn't start voice input: ${error.message}`;
+          if (forGlobalDictation) window.overlay.reportDictationError(message);
+          else add("error", message);
+        }
+      }
+
+      function stopListening() {
+        if (!listening) return;
+        updateListeningUI(false, true);
+        microphoneSelect.disabled = false;
+        transcribeRecording();
+      }
+
+      async function cleanupAudioCapture() {
+        if (audioProcessor) {
+          audioProcessor.onaudioprocess = null;
+          audioProcessor.disconnect();
+          audioProcessor = undefined;
+        }
+        silentGain?.disconnect();
+        silentGain = undefined;
+        mediaStream?.getTracks().forEach((track) => track.stop());
+        mediaStream = undefined;
+        if (audioContext && audioContext.state !== "closed") {
+          await audioContext.close();
+        }
+        audioContext = undefined;
+      }
+
+      async function transcribeRecording() {
+        const pasteIntoFocusedApp = globalDictation;
+        transcriptionStatus = pasteIntoFocusedApp
+          ? null
+          : add("assistant", "Preparing offline transcription…", "thinking");
+        try {
+          const sampleRate = audioContext?.sampleRate || 48000;
+          await cleanupAudioCapture();
+          const wav = toWav(recordedAudio, sampleRate, recordingSampleCount);
+          if (wav.rms < 0.002 && wav.peak < 0.01) {
+            throw new Error(
+              `No sound reached "${microphoneSelect.selectedOptions[0]?.textContent || "the selected microphone"}". Choose another microphone from the selector and check System Settings > Sound > Input.`,
+            );
+          }
+          if (transcriptionStatus)
+            transcriptionStatus.textContent = "Transcribing on this device…";
+          const result = await window.overlay.transcribe(wav.data);
+          transcriptionStatus?.remove();
+          if (result.error) {
+            if (pasteIntoFocusedApp)
+              window.overlay.reportDictationError(result.error);
+            else add("error", result.error);
+          } else if (
+            result.text &&
+            !/^\[blank[_ ]audio\]$/i.test(result.text.trim())
+          ) {
+            if (pasteIntoFocusedApp) {
+              const pasteResult = await window.overlay.pasteTranscription(
+                result.text,
+              );
+              if (pasteResult.error)
+                window.overlay.reportDictationError(pasteResult.error);
+            } else {
+              input.value = [input.value.trimEnd(), result.text]
+                .filter(Boolean)
+                .join(" ");
+              resizeInput();
+              updateSendButton();
+            }
+          } else {
+            const message =
+              "No speech was detected. Check System Settings > Sound > Input, choose the microphone you are speaking into, and try again.";
+            if (pasteIntoFocusedApp)
+              window.overlay.reportDictationError(message);
+            else add("error", message);
+          }
+        } catch (error) {
+          transcriptionStatus?.remove();
+          const message = `Couldn't transcribe audio: ${error.message}`;
+          if (pasteIntoFocusedApp) window.overlay.reportDictationError(message);
+          else add("error", message);
+        } finally {
+          transcriptionStatus = undefined;
+          recordedAudio = [];
+          recordingSampleCount = 0;
+          globalDictation = false;
+          microphoneSelect.disabled = false;
+          updateListeningUI(false);
+          if (!pasteIntoFocusedApp) input.focus();
+        }
+      }
+
+      function toggleGlobalDictation() {
+        if (starting) return;
+        if (globalDictation && listening) {
+          stopListening();
+          return;
+        }
+        if (listening || transcribing) {
+          add(
+            "error",
+            "Stop the current voice recording before starting global dictation.",
+          );
+          return;
+        }
+        startListening(true);
+      }
+
+      function add(role, text, extra = "") {
+        if (resultsSection.hidden) setResultsVisible(true);
+        const el = document.createElement("div");
+        el.className = `msg ${role} ${extra}`.trim();
+        el.textContent = text; // textContent: never render model output as HTML
+        log.appendChild(el);
+        log.scrollTop = log.scrollHeight;
+        updateClearButton();
+        return el;
+      }
+
+      async function setResultsVisible(visible) {
+        if (resultsSection.hidden === !visible) return;
+        resultsSection.hidden = !visible;
+        try {
+          await window.overlay.setResultsVisible(visible);
+        } catch (error) {
+          console.error("Could not resize the results window:", error);
+        }
+      }
+
+      async function send() {
+        const text = input.value.trim();
+        if (!text || busy || listening || transcribing) return;
+        busy = true;
+        updateSendButton();
+        input.value = "";
+        resizeInput();
+        history.push({ role: "user", content: text });
+        add("user", text);
+        const thinking = add("assistant", "Thinking", "thinking");
+
+        try {
+          const res = await window.overlay.chat(history);
+          thinking.remove();
+          if (res.error) {
+            add("error", res.error);
+            history.pop(); // let the user retry the same question
+          } else {
+            history.push({ role: "assistant", content: res.text });
+            add("assistant", res.text);
+          }
+        } catch (error) {
+          thinking.remove();
+          add("error", `Couldn't complete the search: ${error.message}`);
+          history.pop();
+        } finally {
+          busy = false;
+          updateSendButton();
+          updateClearButton();
+          input.focus();
+        }
+      }
+
+      sendBtn.addEventListener("click", send);
+      startListeningBtn.addEventListener("click", () => startListening());
+      stopListeningBtn.addEventListener("click", stopListening);
+      dictateAnywhereBtn.addEventListener("click", () =>
+        window.overlay.toggleGlobalDictation(),
+      );
+      input.addEventListener("input", () => {
+        resizeInput();
+        updateSendButton();
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          send();
+        }
+      });
+      document.getElementById("clear").addEventListener("click", () => {
+        if (busy) return;
+        history = [];
+        log.innerHTML = "";
+        updateClearButton();
+        setResultsVisible(false);
+      });
+
+      updateSendButton();
+      window.overlay.onClickThrough((on) => {
+        const mode = document.getElementById("mode");
+        mode.textContent = on ? "click-through" : "interactive";
+        mode.classList.toggle("click-through", on);
+      });
+      window.overlay.onFocusInput(() => input.focus());
+      window.overlay.onGlobalDictationToggle(toggleGlobalDictation);
+      window.overlay.onDictationError((message) => add("error", message));
+    </script>
+  </body>
+</html>
