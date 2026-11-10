@@ -3,8 +3,9 @@ const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("overlay", {
   onClickThrough: (cb) => ipcRenderer.on("click-through", (_e, on) => cb(on)),
   onFocusInput: (cb) => ipcRenderer.on("focus-input", () => cb()),
-  setResultsVisible: (visible) =>
-    ipcRenderer.invoke("window:set-results-visible", visible),
+  setContentHeight: (height) =>
+    ipcRenderer.invoke("window:set-content-height", height),
+  resetContentHeight: () => ipcRenderer.invoke("window:reset-content-height"),
   chat: (history) => ipcRenderer.invoke("ai:chat", history),
   transcribe: (audio) => ipcRenderer.invoke("ai:transcribe", audio),
   onTranscriptionProgress: (cb) =>

@@ -149,12 +149,14 @@
         color: #d7f6e5;
       }
       #start-listening,
+      #start-computer-listening,
       #stop-listening {
         display: inline-flex;
         align-items: center;
         gap: 6px;
       }
-      #start-listening[hidden] {
+      #start-listening[hidden],
+      #start-computer-listening[hidden] {
         display: none;
       }
       #start-listening:disabled {
@@ -162,6 +164,12 @@
       }
       #start-listening svg {
         color: #b7aaff;
+      }
+      #start-computer-listening {
+        color: #9edcf0;
+      }
+      #start-computer-listening svg {
+        color: #9edcf0;
       }
       #dictate-anywhere svg {
         color: #9de0c0;
@@ -277,7 +285,6 @@
         position: relative;
         flex: 1;
         min-height: 120px;
-        max-height: 300px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -485,14 +492,14 @@
             class="mic-meter"
             id="mic-meter"
             role="meter"
-            aria-label="Microphone input level"
+            aria-label="Captured audio input level"
             aria-valuemin="0"
             aria-valuemax="100"
             hidden
           >
             <div class="mic-meter-fill" id="mic-meter-fill"></div>
           </div>
-          <button id="start-listening" title="Start offline voice input">
+          <button id="start-listening" title="Listen to your microphone">
             <svg
               width="13"
               height="13"
@@ -516,7 +523,37 @@
                 stroke-linecap="round"
               />
             </svg>
-            <span id="voice-action-label">Start listening</span>
+            <span>My voice</span>
+          </button>
+          <button
+            id="start-computer-listening"
+            title="Listen to audio playing on this computer"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="3"
+                y="4"
+                width="18"
+                height="13"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.7"
+              />
+              <path
+                d="M8 21h8m-4-4v4m-5-9 3-3 2 2 3-4"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>Computer audio</span>
           </button>
           <button id="stop-listening" title="Stop voice input" hidden>
             Stop listening
@@ -582,6 +619,9 @@
       const input = document.getElementById("input");
       const sendBtn = document.getElementById("send");
       const startListeningBtn = document.getElementById("start-listening");
+      const startComputerListeningBtn = document.getElementById(
+        "start-computer-listening",
+      );
       const stopListeningBtn = document.getElementById("stop-listening");
       const dictateAnywhereBtn = document.getElementById("dictate-anywhere");
       const listeningIndicator = document.getElementById("listening-indicator");
@@ -601,7 +641,9 @@
       let recordedAudio = [];
       let recordingSampleCount = 0;
       let globalDictation = false;
+      let listeningSource = "microphone";
       let transcriptionStatus;
+      let fitWindowFrame;
 
       async function refreshMicrophones(
         preferredDeviceId = microphoneSelect.value,
@@ -693,7 +735,7 @@
         );
       });
 
-      function updateMicrophoneLevel(samples) {
+      function updateAudioInputLevel(samples) {
         let sumSquares = 0;
         for (let i = 0; i < samples.length; i++)
           sumSquares += samples[i] * samples[i];
@@ -728,18 +770,27 @@
         listening = active;
         transcribing = isTranscribing;
         startListeningBtn.hidden = active;
+        startComputerListeningBtn.hidden = active;
         startListeningBtn.disabled = isTranscribing;
+        startComputerListeningBtn.disabled = isTranscribing;
         stopListeningBtn.hidden = !active;
         stopListeningBtn.disabled = isTranscribing;
         stopListeningBtn.textContent = globalDictation
           ? "Stop & paste"
           : "Stop listening";
         listeningIndicator.hidden = !active;
+        const sourceName =
+          listeningSource === "computer" ? "computer audio" : "your microphone";
+        listeningIndicator.setAttribute(
+          "aria-label",
+          isTranscribing ? "Transcribing audio" : `Listening to ${sourceName}`,
+        );
         startListeningBtn.title = isTranscribing
           ? "Transcribing audio…"
-          : "Start offline voice input";
-        document.getElementById("voice-action-label").textContent =
-          isTranscribing ? "Transcribing…" : "Start listening";
+          : "Listen to your microphone";
+        startComputerListeningBtn.title = isTranscribing
+          ? "Transcribing audio…"
+          : "Listen to audio playing on this computer";
         microphoneMeter.hidden = !active;
         if (!active) {
           microphoneMeter.setAttribute("aria-valuenow", "0");
@@ -764,38 +815,61 @@
         input.style.overflowY = input.scrollHeight > 90 ? "auto" : "hidden";
       }
 
-      async function startListening(forGlobalDictation = false) {
+      async function startListening(
+        forGlobalDictation = false,
+        sourceType = "microphone",
+      ) {
         if (listening || starting || transcribing) return;
         starting = true;
         globalDictation = forGlobalDictation;
+        listeningSource = sourceType;
         if (
-          !navigator.mediaDevices?.getUserMedia ||
+          (sourceType === "microphone" &&
+            !navigator.mediaDevices?.getUserMedia) ||
+          (sourceType === "computer" &&
+            !navigator.mediaDevices?.getDisplayMedia) ||
           !window.AudioContext?.prototype.createScriptProcessor
         ) {
           starting = false;
           globalDictation = false;
           const message =
-            "Microphone recording isn't supported by this version of Veilpad.";
+            sourceType === "computer"
+              ? "Computer audio capture isn't supported by this version of Veilpad."
+              : "Microphone recording isn't supported by this version of Veilpad.";
           if (forGlobalDictation) window.overlay.reportDictationError(message);
           else add("error", message);
           return;
         }
         try {
           const selectedDeviceId = microphoneSelect.value;
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              ...(selectedDeviceId
-                ? { deviceId: { exact: selectedDeviceId } }
-                : {}),
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true,
-            },
-          });
-          const actualDeviceId = mediaStream
-            .getAudioTracks()[0]
-            ?.getSettings().deviceId;
-          await refreshMicrophones(selectedDeviceId || actualDeviceId || "");
+          if (sourceType === "computer") {
+            mediaStream = await navigator.mediaDevices.getDisplayMedia({
+              audio: true,
+              video: true,
+            });
+            mediaStream.getVideoTracks().forEach((track) => track.stop());
+            const audioTrack = mediaStream.getAudioTracks()[0];
+            if (!audioTrack || audioTrack.readyState !== "live") {
+              throw new Error(
+                "Computer audio isn't available. Allow screen and system-audio recording in your system privacy settings. When running from source, allow it for your terminal or editor too.",
+              );
+            }
+          } else {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                ...(selectedDeviceId
+                  ? { deviceId: { exact: selectedDeviceId } }
+                  : {}),
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+              },
+            });
+            const actualDeviceId = mediaStream
+              .getAudioTracks()[0]
+              ?.getSettings().deviceId;
+            await refreshMicrophones(selectedDeviceId || actualDeviceId || "");
+          }
           recordedAudio = [];
           recordingSampleCount = 0;
           audioContext = new AudioContext();
@@ -809,16 +883,23 @@
             const samples = new Float32Array(inputSamples);
             recordedAudio.push(samples);
             recordingSampleCount += samples.length;
-            updateMicrophoneLevel(samples);
+            updateAudioInputLevel(samples);
           };
           source.connect(audioProcessor);
           audioProcessor.connect(silentGain);
           silentGain.connect(audioContext.destination);
-          if (selectedDeviceId && selectedDeviceId !== actualDeviceId) {
+          const actualDeviceId = mediaStream
+            .getAudioTracks()[0]
+            ?.getSettings().deviceId;
+          if (
+            sourceType === "microphone" &&
+            selectedDeviceId &&
+            selectedDeviceId !== actualDeviceId
+          ) {
             throw new Error("The selected microphone could not be opened.");
           }
           updateListeningUI(true);
-          microphoneSelect.disabled = true;
+          microphoneSelect.disabled = sourceType !== "microphone";
           starting = false;
           if (globalDictation) window.overlay.dictationStarted();
         } catch (error) {
@@ -827,11 +908,15 @@
           await cleanupAudioCapture();
           updateListeningUI(false);
           const message =
-            error.name === "NotAllowedError"
-              ? "Microphone access was denied. Allow Veilpad to use the microphone in System Settings."
-              : error.name === "NotFoundError"
-                ? "No microphone was found. Connect a microphone and try again."
-                : `Couldn't start voice input: ${error.message}`;
+            sourceType === "computer"
+              ? error.name === "NotAllowedError"
+                ? "Computer audio access was denied. Allow screen and system-audio recording in your system privacy settings. When running from source, allow it for your terminal or editor too."
+                : `Couldn't capture computer audio: ${error.message}`
+              : error.name === "NotAllowedError"
+                ? "Microphone access was denied. Allow Veilpad to use the microphone in System Settings."
+                : error.name === "NotFoundError"
+                  ? "No microphone was found. Connect a microphone and try again."
+                  : `Couldn't start voice input: ${error.message}`;
           if (forGlobalDictation) window.overlay.reportDictationError(message);
           else add("error", message);
         }
@@ -862,6 +947,8 @@
 
       async function transcribeRecording() {
         const pasteIntoFocusedApp = globalDictation;
+        const sourceName =
+          listeningSource === "computer" ? "computer audio" : "microphone";
         transcriptionStatus = pasteIntoFocusedApp
           ? null
           : add("assistant", "Preparing offline transcription…", "thinking");
@@ -871,7 +958,9 @@
           const wav = toWav(recordedAudio, sampleRate, recordingSampleCount);
           if (wav.rms < 0.002 && wav.peak < 0.01) {
             throw new Error(
-              `No sound reached "${microphoneSelect.selectedOptions[0]?.textContent || "the selected microphone"}". Choose another microphone from the selector and check System Settings > Sound > Input.`,
+              sourceName === "computer"
+                ? "No computer audio was captured. Play audio while listening and check your system's screen and system-audio recording permissions."
+                : `No sound reached "${microphoneSelect.selectedOptions[0]?.textContent || "the selected microphone"}". Choose another microphone from the selector and check System Settings > Sound > Input.`,
             );
           }
           if (transcriptionStatus)
@@ -901,7 +990,9 @@
             }
           } else {
             const message =
-              "No speech was detected. Check System Settings > Sound > Input, choose the microphone you are speaking into, and try again.";
+              listeningSource === "computer"
+                ? "No speech was detected in computer audio. Make sure speech is playing and try again."
+                : "No speech was detected. Check System Settings > Sound > Input, choose the microphone you are speaking into, and try again.";
             if (pasteIntoFocusedApp)
               window.overlay.reportDictationError(message);
             else add("error", message);
@@ -946,18 +1037,46 @@
         log.appendChild(el);
         log.scrollTop = log.scrollHeight;
         updateClearButton();
+        scheduleWindowFit();
         return el;
       }
 
-      async function setResultsVisible(visible) {
+      function scheduleWindowFit() {
+        if (fitWindowFrame !== undefined) return;
+        fitWindowFrame = requestAnimationFrame(() => {
+          fitWindowFrame = undefined;
+          if (resultsSection.hidden) return;
+          const card = document.querySelector(".card");
+          const height =
+            card.scrollHeight +
+            card.offsetHeight -
+            card.clientHeight -
+            log.clientHeight +
+            log.scrollHeight;
+          window.overlay.setContentHeight(Math.ceil(height)).catch((error) => {
+            console.error("Could not resize the results window:", error);
+          });
+        });
+      }
+
+      function setResultsVisible(visible) {
         if (resultsSection.hidden === !visible) return;
         resultsSection.hidden = !visible;
-        try {
-          await window.overlay.setResultsVisible(visible);
-        } catch (error) {
-          console.error("Could not resize the results window:", error);
+        if (visible) {
+          scheduleWindowFit();
+        } else {
+          window.overlay.resetContentHeight().catch((error) => {
+            console.error("Could not reset the results window:", error);
+          });
         }
       }
+
+      const logObserver = new MutationObserver(scheduleWindowFit);
+      logObserver.observe(log, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+      });
 
       async function send() {
         const text = input.value.trim();
@@ -994,6 +1113,9 @@
 
       sendBtn.addEventListener("click", send);
       startListeningBtn.addEventListener("click", () => startListening());
+      startComputerListeningBtn.addEventListener("click", () =>
+        startListening(false, "computer"),
+      );
       stopListeningBtn.addEventListener("click", stopListening);
       dictateAnywhereBtn.addEventListener("click", () =>
         window.overlay.toggleGlobalDictation(),

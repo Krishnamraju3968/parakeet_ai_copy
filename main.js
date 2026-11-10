@@ -3,6 +3,7 @@ const {
   BrowserWindow,
   globalShortcut,
   screen,
+  desktopCapturer,
   ipcMain,
   session,
   systemPreferences,
@@ -43,15 +44,19 @@ let whisperContextPromise;
 let win;
 let clickThrough = false;
 const windowWidth = 1000;
-const compactWindowHeight = 220;
-const expandedWindowHeight = 440;
+const compactWindowHeight = 180;
 
 function createWindow() {
-  const { x, y, width: workAreaWidth } = screen.getPrimaryDisplay().workArea;
+  const {
+    x,
+    y,
+    width: workAreaWidth,
+    height: workAreaHeight,
+  } = screen.getPrimaryDisplay().workArea;
 
   win = new BrowserWindow({
     width: windowWidth,
-    height: compactWindowHeight,
+    height: Math.min(compactWindowHeight, workAreaHeight),
     x: x + (workAreaWidth - windowWidth) / 2,
     y,
     frame: false,
@@ -75,15 +80,32 @@ function createWindow() {
   win.loadFile("index.html");
 }
 
-ipcMain.handle("window:set-results-visible", (event, visible) => {
+ipcMain.handle("window:set-content-height", (event, height) => {
   if (event.sender !== win?.webContents) {
     throw new Error("Window resize was requested by an unexpected renderer.");
   }
-  if (typeof visible !== "boolean") {
-    throw new TypeError("Results visibility must be a boolean.");
+  if (!Number.isFinite(height) || height < 1) {
+    throw new TypeError("Window height must be a positive finite number.");
   }
   const [width] = win.getSize();
-  win.setSize(width, visible ? expandedWindowHeight : compactWindowHeight);
+  const { height: workAreaHeight } = screen.getDisplayMatching(
+    win.getBounds(),
+  ).workArea;
+  win.setSize(
+    width,
+    Math.min(workAreaHeight, Math.max(compactWindowHeight, Math.ceil(height))),
+  );
+});
+
+ipcMain.handle("window:reset-content-height", (event) => {
+  if (event.sender !== win?.webContents) {
+    throw new Error("Window resize was requested by an unexpected renderer.");
+  }
+  const [width] = win.getSize();
+  const { height: workAreaHeight } = screen.getDisplayMatching(
+    win.getBounds(),
+  ).workArea;
+  win.setSize(width, Math.min(compactWindowHeight, workAreaHeight));
 });
 
 /* ── Exa answers. The key stays in this main process, never in the page. ── */
@@ -300,13 +322,46 @@ app.whenReady().then(() => {
   });
 
   const appPage = pathToFileURL(path.join(__dirname, "index.html")).href;
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    if (request.frame?.url !== appPage) {
+      callback(null);
+      return;
+    }
+    desktopCapturer
+      .getSources({
+        types: ["screen"],
+        thumbnailSize: { width: 0, height: 0 },
+      })
+      .then(
+        (sources) => {
+          const primaryDisplayId = String(screen.getPrimaryDisplay().id);
+          const source =
+            sources.find((item) => item.display_id === primaryDisplayId) ||
+            sources[0];
+          if (!source) {
+            callback(null);
+            return;
+          }
+          callback({ video: source, audio: "loopback" });
+        },
+        (error) => {
+          console.error("Could not capture computer audio:", error);
+          callback(null);
+        },
+      );
+  });
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback, details) => {
       const isAppPage = webContents.getURL() === appPage;
       const requestsAudio =
         permission === "media" && details.mediaTypes?.includes("audio");
-      if (!isAppPage || !requestsAudio) {
+      const requestsDisplayCapture = permission === "display-capture";
+      if (!isAppPage || (!requestsAudio && !requestsDisplayCapture)) {
         callback(false);
+        return;
+      }
+      if (requestsDisplayCapture) {
+        callback(true);
         return;
       }
       if (process.platform === "darwin") {
